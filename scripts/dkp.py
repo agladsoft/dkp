@@ -426,16 +426,13 @@ class DKP(object):
                     self.parse_sheet(df)
         except Exception as exception:
             logger.error(f"Ошибка при чтении файла {self.basename_filename}: {exception}")
+            telegram(f'Ошибка при обработке файла {sys.argv[1]}. Ошибка : {exception}')
+            print("unknown", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
     logger.info(f"{os.path.basename(sys.argv[1])} has started processing")
-    try:
-        dkp: DKP = DKP(os.path.abspath(sys.argv[1]), sys.argv[2])
-        dkp.main()
-    except Exception as ex:
-        logger.error(f"Unknown error. Exception is {ex}")
-        telegram(f'Ошибка при обработке файла {sys.argv[1]}. Ошибка : {ex}')
-        print("unknown", file=sys.stderr)
-        sys.exit(1)
+    dkp: DKP = DKP(os.path.abspath(sys.argv[1]), sys.argv[2])
+    dkp.main()
     logger.info(f"{os.path.basename(sys.argv[1])} has finished processing")
