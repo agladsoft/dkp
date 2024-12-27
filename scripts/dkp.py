@@ -419,6 +419,8 @@ class DKP(object):
         try:
             sheets = pd.ExcelFile(self.filename).sheet_names
             logger.info(f"Sheets is {sheets}")
+            if duplicates := [sheet for sheet in sheets if sheet in SHEETS_NAME]:
+                raise ValueError(f"Duplicate sheet names found in SHEETS_NAME: {set(duplicates)}")
             for sheet in sheets:
                 if sheet in SHEETS_NAME:
                     df = pd.read_excel(self.filename, sheet_name=sheet, dtype=str, header=None)
@@ -426,7 +428,7 @@ class DKP(object):
                     self.parse_sheet(df)
         except Exception as exception:
             logger.error(f"Ошибка при чтении файла {self.basename_filename}: {exception}")
-            telegram(f'Ошибка при обработке файла {sys.argv[1]}. Ошибка : {exception}')
+            telegram(f'Ошибка при обработке файла {self.basename_filename}. Ошибка : {exception}')
             print("unknown", file=sys.stderr)
             sys.exit(1)
 
