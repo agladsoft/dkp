@@ -33,8 +33,6 @@ class DKP(object):
             "bay": None,
             "owner": None,
             "container_size": None,
-            # "container_count": None,
-            # "teu": None,
             "unit_margin_income_marine": None,
             "unit_margin_income_port": None,
             "unit_margin_income_terminal1": None,
@@ -123,7 +121,7 @@ class DKP(object):
         :return:
         """
         list_columns = []
-        for keys in list(HEADERS_ENG.keys()):
+        for keys in list(COLUMN_NAMES.values()):
             list_columns.extend(iter(keys))
         return list_columns
 
@@ -150,7 +148,7 @@ class DKP(object):
         count: int = sum(element in list_columns for element in row)
         return int(count / len(row) * 100)
 
-    def get_columns_position(self, row: list, block_position: list, headers, dict_columns_position) -> None:
+    def get_columns_position(self, row: list, block_position: list, headers: dict, dict_columns_position) -> None:
         """
         Get the position of each column in the file to process the row related to that column.
         :param row:
@@ -161,11 +159,11 @@ class DKP(object):
         """
         start_index, end_index = block_position
         row: list = list(map(self.remove_symbols_in_columns, row))
-        for index, column in enumerate(row):
-            for columns in headers:
+        for index, col in enumerate(row):
+            for eng_column, columns in headers.items():
                 for column_eng in columns:
-                    if column == column_eng and start_index <= index < end_index:
-                        dict_columns_position[headers[columns]] = index
+                    if col == column_eng and start_index <= index < end_index:
+                        dict_columns_position[eng_column] = index
 
     def check_errors_in_columns(self, list_columns: list, dict_columns: dict, message: str, error_code: int) -> None:
         """
@@ -198,7 +196,7 @@ class DKP(object):
             message="Error code 2: Block columns not in file or changed",
             error_code=2
         )
-        self.get_columns_position(row, [0, len(row)], HEADERS_ENG, self.dict_columns_position)
+        self.get_columns_position(row, [0, len(row)], COLUMN_NAMES, self.dict_columns_position)
 
         items: list = list(self.dict_block_position.items())
         dict_block_position_ranges = {
@@ -206,8 +204,8 @@ class DKP(object):
             for (current_key, start_index), (_, next_index) in zip(items, items[1:] + [(None, len(row))])
         }
 
-        for column, block_position in dict_block_position_ranges.items():
-            if repeated_column := REPEATED_COLUMNS_MAPPING.get(column):
+        for col, block_position in dict_block_position_ranges.items():
+            if repeated_column := BLOCK_TABLE_COLUMNS.get(col):
                 self.get_columns_position(row, block_position, repeated_column, self.dict_columns_position)
 
         self.check_errors_in_columns(
@@ -285,15 +283,15 @@ class DKP(object):
             "date": f"{metadata['year']}-{index_month:02d}-01",
 
             "container_count": next((
-                safe_strip(row[self.dict_columns_position[val]])
-                for key, val in REPEATED_COLUMNS_MAPPING["natural_indicators_ktk"].items()
-                if month_string in key
+                safe_strip(row[self.dict_columns_position[key]])
+                for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_ktk"].items()
+                if month_string in val
             ), None),
 
             "teu": next((
-                safe_strip(row[self.dict_columns_position[val]])
-                for key, val in REPEATED_COLUMNS_MAPPING["natural_indicators_teus"].items()
-                if month_string in key
+                safe_strip(row[self.dict_columns_position[key]])
+                for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_teus"].items()
+                if month_string in val
             ), None),
 
             "unit_margin_income_marine": safe_strip(row[self.dict_columns_position["unit_margin_income_marine"]]),
@@ -359,28 +357,29 @@ class DKP(object):
         """
         filename: str = os.path.basename(self.filename)
         logger.info(f'File - {filename}. Datetime - {datetime.now()}')
-        metadata: dict = {}
-
         # Match department
         dkp_pattern: str = '|'.join(map(re.escape, DKP_NAMES))
         department_match: Match = re.search(rf'{dkp_pattern}', filename)
         if not department_match:
-            error_message = f"Error code 10: Department not in file name! File: {self.filename}"
-            logger.error(error_message)
-            telegram(error_message)
-            sys.exit(10)
-        metadata['department'] = department_match.group(0)
-
+            self.send_error(
+                message='Error code 10: Department not in file name! File: ', error_code=10
+            )
+        metadata: dict = {'department': department_match.group(0)}
         # Match year
         year_match: Match = re.search(r'\d{4}', filename)
         if not year_match:
-            error_message = f"Error code 1: Year not in file name! File: {self.filename}"
-            logger.error(error_message)
-            telegram(error_message)
-            sys.exit(1)
+            self.send_error(
+                message='Error code 1: Year not in file name! File: ', error_code=1
+            )
         metadata['year'] = int(year_match.group(0))
 
         return metadata
+
+    def send_error(self, message, error_code):
+        error_message = f"{message}{self.filename}"
+        logger.error(error_message)
+        telegram(error_message)
+        sys.exit(error_code)
 
     def parse_sheet(self, df: pd.DataFrame, coefficient_of_header: int = 3):
         """
@@ -398,14 +397,12 @@ class DKP(object):
             if self.get_probability_of_header(row, list_columns) > coefficient_of_header:
                 self.check_errors_in_header(row)
             elif not self.dict_columns_position["client"]:
-                self.get_columns_position(row, [0, len(row)], TRANSPOSE_NAMES, self.dict_block_position)
+                self.get_columns_position(row, [0, len(row)], BLOCK_NAMES, self.dict_block_position)
             elif self.is_table_starting(row):
-                for index_month, month_string in zip(
-                    range(1, 13),
-                    [month[0] for month in REPEATED_COLUMNS_MAPPING["natural_indicators_ktk"].keys()]
-                ):
-                    list_data.append(self.get_content_in_table(index, index_month, month_string, row, metadata))
-
+                list_data.extend(
+                    self.get_content_in_table(index, index_month, month_string, row, metadata)
+                    for index_month, month_string in enumerate(MONTH_NAMES, start=1)
+                )
         self.write_to_json(list_data)
 
     def main(self) -> None:
