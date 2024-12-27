@@ -419,14 +419,13 @@ class DKP(object):
         try:
             sheets = pd.ExcelFile(self.filename).sheet_names
             logger.info(f"Sheets is {sheets}")
-            duplicates: list = [sheet for sheet in sheets if sheet in SHEETS_NAME]
-            if len(duplicates) > 1:
-                raise ValueError(f"Duplicate sheet names found in SHEETS_NAME: {set(duplicates)}")
-            for sheet in sheets:
-                if sheet in SHEETS_NAME:
-                    df = pd.read_excel(self.filename, sheet_name=sheet, dtype=str, header=None)
-                    df = df.dropna(how='all').replace({np.nan: None, "NaT": None})
-                    self.parse_sheet(df)
+            needed_sheet: list = [sheet for sheet in sheets if sheet in SHEETS_NAME]
+            if len(needed_sheet) > 1:
+                raise ValueError(f"Нужных листов из SHEETS_NAME больше ОДНОГО: {needed_sheet}")
+            for sheet in needed_sheet:
+                df = pd.read_excel(self.filename, sheet_name=sheet, dtype=str, header=None)
+                df = df.dropna(how='all').replace({np.nan: None, "NaT": None})
+                self.parse_sheet(df)
         except Exception as exception:
             logger.error(f"Ошибка при чтении файла {self.basename_filename}: {exception}")
             telegram(f'Ошибка при обработке файла {self.basename_filename}. Ошибка : {exception}')
