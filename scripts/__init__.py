@@ -46,8 +46,8 @@ def group_nested_columns(
     result: dict = {}
     for row in reference:
         if row[filter_key] == filter_value:
-            block_key = row[block_index]
-            table_key = row[group_index]
+            block_key: str = row[block_index]
+            table_key: str = row[group_index]
             if block_key not in result:
                 result[block_key] = {}
             if table_key in result[block_key]:
