@@ -419,7 +419,8 @@ class DKP(object):
         try:
             sheets = pd.ExcelFile(self.filename).sheet_names
             logger.info(f"Sheets is {sheets}")
-            if duplicates := [sheet for sheet in sheets if sheet in SHEETS_NAME]:
+            duplicates: list = [sheet for sheet in sheets if sheet in SHEETS_NAME]
+            if len(duplicates) > 1:
                 raise ValueError(f"Duplicate sheet names found in SHEETS_NAME: {set(duplicates)}")
             for sheet in sheets:
                 if sheet in SHEETS_NAME:
