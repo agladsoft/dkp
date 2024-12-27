@@ -11,6 +11,17 @@ SHEETS_NAME: list = ["ПЛАН_ПРОДАЖ", "ПЛАН-ПРОДАЖ", "ПЛАН
 
 DKP_NAMES: list = ["ДКП_ЮФО", "ДКП_ДВ"]
 
+HEADERS_ENG: dict = {
+    ("клиент",): "client",
+    ("описание",): "description",
+    ("стратегич. проект",): "project",
+    ("груз",): "cargo",
+    ("направление",): "direction",
+    ("бассейн",): "bay",
+    ("принадлежность ктк",): "owner",
+    ("разм",): "container_size"
+}
+
 TRANSPOSE_NAMES: dict = {
     ("НАТУРАЛЬНЫЕ ПОКАЗАТЕЛИ, ктк",): "natural_indicators_ktk",
     ("СТАВКИ СОИСПОЛНИТЕЛЕЙ НА ЕДИНИЦУ", ): "unit_rates_co_executors",
@@ -102,17 +113,6 @@ REPEATED_COLUMNS_MAPPING: dict = {
         ("ноя",): "natural_indicators_teus_nov",
         ("дек",): "natural_indicators_teus_dec"
     }
-}
-
-HEADERS_ENG: dict = {
-    ("клиент",): "client",
-    ("описание",): "description",
-    ("стратегич. проект",): "project",
-    ("груз",): "cargo",
-    ("направление",): "direction",
-    ("бассейн",): "bay",
-    ("принадлежность ктк",): "owner",
-    ("разм",): "container_size"
 }
 
 DATE_FORMATS: list = [
