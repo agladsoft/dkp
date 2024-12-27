@@ -23,6 +23,7 @@ class JsonEncoder(json.JSONEncoder):
 class DKP(object):
     def __init__(self, filename: str, folder: str):
         self.filename: str = filename
+        self.basename_filename: str = os.path.basename(filename)
         self.folder: str = folder
         self.dict_columns_position: Dict[str, Optional[int]] = {
             "client": None,
@@ -178,10 +179,7 @@ class DKP(object):
             logger.error(message)
             logger.error(dict_columns)
             print(f"{error_code}", file=sys.stderr)
-            telegram(
-                f'Ошибка при обработке файла {self.filename}, код ошибки {error_code} '
-                f'{ERRORS.get(error_code, "Не известный номер ошибки , необходимо проверить.")}'
-            )
+            telegram(f"Ошибка при обработке файла {self.basename_filename}, код ошибки {error_code}")
             sys.exit(error_code)
 
     def check_errors_in_header(self, row: list) -> None:
@@ -235,10 +233,9 @@ class DKP(object):
         if not list_data:
             logger.error("Error code 4: length list equals 0!")
             print("4", file=sys.stderr)
-            telegram(f"В Файле {self.filename}: Отсутствуют данные : Error code 4: length list equals 0!")
+            telegram(f"В Файле {self.basename_filename}: Отсутствуют данные : Error code 4: length list equals 0!")
             sys.exit(4)
-        basename = os.path.basename(self.filename)
-        output_file_path = os.path.join(self.folder, f'{basename}.json')
+        output_file_path = os.path.join(self.folder, f'{self.basename_filename}.json')
         with open(output_file_path, 'w', encoding='utf-8') as f:
             json.dump(list_data, f, ensure_ascii=False, indent=4, cls=JsonEncoder)
 
@@ -277,7 +274,6 @@ class DKP(object):
             "direction": safe_strip(row[self.dict_columns_position["direction"]]),
             "bay": safe_strip(row[self.dict_columns_position["bay"]]),
             "owner": safe_strip(row[self.dict_columns_position["owner"]]),
-
             "month": index_month,
             "month_string": month_string,
             "date": f"{metadata['year']}-{index_month:02d}-01",
@@ -287,7 +283,6 @@ class DKP(object):
                 for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_ktk"].items()
                 if month_string in val
             ), None),
-
             "teu": next((
                 safe_strip(row[self.dict_columns_position[key]])
                 for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_teus"].items()
@@ -344,7 +339,7 @@ class DKP(object):
             "co_executor_other1": safe_strip(row[self.dict_columns_position["co_executor_other1"]]),
             "co_executor_other2": safe_strip(row[self.dict_columns_position["co_executor_other2"]]),
 
-            "original_file_name": os.path.basename(self.filename),
+            "original_file_name": self.basename_filename,
             "original_file_parsed_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
@@ -355,18 +350,17 @@ class DKP(object):
         Extracts department and year information from the file name.
         :return:
         """
-        filename: str = os.path.basename(self.filename)
-        logger.info(f'File - {filename}. Datetime - {datetime.now()}')
+        logger.info(f'File - {self.basename_filename}. Datetime - {datetime.now()}')
         # Match department
         dkp_pattern: str = '|'.join(map(re.escape, DKP_NAMES))
-        department_match: Match = re.search(rf'{dkp_pattern}', filename)
+        department_match: Match = re.search(rf'{dkp_pattern}', self.basename_filename)
         if not department_match:
             self.send_error(
                 message='Error code 10: Department not in file name! File: ', error_code=10
             )
         metadata: dict = {'department': department_match.group(0)}
         # Match year
-        year_match: Match = re.search(r'\d{4}', filename)
+        year_match: Match = re.search(r'\d{4}', self.basename_filename)
         if not year_match:
             self.send_error(
                 message='Error code 1: Year not in file name! File: ', error_code=1
@@ -375,13 +369,19 @@ class DKP(object):
 
         return metadata
 
-    def send_error(self, message, error_code):
-        error_message = f"{message}{self.filename}"
+    def send_error(self, message: str, error_code: int) -> None:
+        """
+        Send error.
+        :param message:
+        :param error_code:
+        :return:
+        """
+        error_message: str = f"{message}{self.basename_filename}"
         logger.error(error_message)
         telegram(error_message)
         sys.exit(error_code)
 
-    def parse_sheet(self, df: pd.DataFrame, coefficient_of_header: int = 3):
+    def parse_sheet(self, df: pd.DataFrame, coefficient_of_header: int = 3) -> None:
         """
         Parse sheet.
         :param df:
@@ -391,7 +391,7 @@ class DKP(object):
         list_data: list = []
         metadata: dict = self.extract_metadata_from_filename()
         list_columns: List[str] = self._get_list_columns()
-
+        index: Union[int, Hashable]
         for index, row in df.iterrows():
             row = list(row.to_dict().values())
             if self.get_probability_of_header(row, list_columns) > coefficient_of_header:
@@ -399,15 +399,21 @@ class DKP(object):
             elif not self.dict_columns_position["client"]:
                 self.get_columns_position(row, [0, len(row)], BLOCK_NAMES, self.dict_block_position)
             elif self.is_table_starting(row):
-                list_data.extend(
-                    self.get_content_in_table(index, index_month, month_string, row, metadata)
-                    for index_month, month_string in enumerate(MONTH_NAMES, start=1)
-                )
+                try:
+                    list_data.extend(
+                        self.get_content_in_table(index, index_month, month_string, row, metadata)
+                        for index_month, month_string in enumerate(MONTH_NAMES, start=1)
+                    )
+                except (IndexError, ValueError, TypeError) as exception:
+                    telegram(f"Ошибка возникла в строке {index + 1}. Файл - {self.basename_filename}")
+                    logger.error(f"Error code 5: error processing in row {index + 1}! Exception - {exception}")
+                    print(f"5_in_row_{index + 1}", file=sys.stderr)
+                    sys.exit(5)
         self.write_to_json(list_data)
 
     def main(self) -> None:
         """
-
+        Main function.
         :return:
         """
         try:
@@ -419,7 +425,7 @@ class DKP(object):
                     df = df.dropna(how='all').replace({np.nan: None, "NaT": None})
                     self.parse_sheet(df)
         except Exception as exception:
-            logger.error(f"Ошибка при чтении файла {self.filename}: {exception}")
+            logger.error(f"Ошибка при чтении файла {self.basename_filename}: {exception}")
 
 
 if __name__ == "__main__":
