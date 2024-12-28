@@ -321,7 +321,7 @@ class DKP(object):
         :return: A dictionary containing parsed and processed data from the row.
         """
 
-        def safe_strip(value: str) -> Optional[str, float, int]:
+        def safe_strip(value: str) -> Union[str, float, int, None]:
             if not value:
                 return None
 
@@ -499,7 +499,10 @@ class DKP(object):
                         for index_month, month_string in enumerate(MONTH_NAMES, start=1)
                     )
                 except (IndexError, ValueError, TypeError) as exception:
-                    telegram(f"Ошибка возникла в строке {index + 1}. Файл - {self.basename_filename}")
+                    telegram(
+                        f"Ошибка возникла в строке {index + 1}. "
+                        f"Файл - {self.basename_filename}. Exception - {exception}"
+                    )
                     logger.error(f"Error code 5: error processing in row {index + 1}! Exception - {exception}")
                     print(f"5_in_row_{index + 1}", file=sys.stderr)
                     sys.exit(5)
