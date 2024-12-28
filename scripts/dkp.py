@@ -92,9 +92,9 @@ class DKP(object):
     @staticmethod
     def is_digit(x: str) -> bool:
         """
-        Checks if a value is a number.
-        :param x:
-        :return:
+        Checks if a given string can be converted to a float.
+        :param x: The string to check.
+        :return: True if x can be converted to a float, False otherwise.
         """
         try:
             float(re.sub(r'(?<=\d) (?=\d)', '', x))
@@ -105,10 +105,12 @@ class DKP(object):
     @staticmethod
     def merge_two_dicts(x: Dict, y: Dict) -> dict:
         """
-        Merges two dictionaries.
-        :param x: One dict.
-        :param y: Two dict.
-        :return:
+        Merge two dictionaries, x and y, into a new dictionary, z.
+        The values in y will overwrite the values in x if there are any keys in common.
+
+        :param x: The first dictionary to merge.
+        :param y: The second dictionary to merge.
+        :return: A new dictionary with the merged values.
         """
         z: Dict = x.copy()  # start with keys and values of x
         z.update(y)  # modifies z with keys and values of y
@@ -117,10 +119,14 @@ class DKP(object):
     @staticmethod
     def _get_list_columns() -> List[str]:
         """
-        Getting all column names for all lines in the __init__.py file.
-        :return:
+        Returns a list of all possible column names.
+
+        This function takes all the values from COLUMN_NAMES (which is a dictionary of lists)
+        and flattens them into a single list. This list is then returned.
+
+        :return: A list of column names.
         """
-        list_columns = []
+        list_columns: list = []
         for keys in list(COLUMN_NAMES.values()):
             list_columns.extend(iter(keys))
         return list_columns
@@ -128,9 +134,13 @@ class DKP(object):
     @staticmethod
     def remove_symbols_in_columns(row: Optional[str]) -> str:
         """
-        Bringing the header column to a unified form.
-        :param row:
-        :return:
+        Removes extra spaces and newline characters from a string.
+
+        This method takes a string, removes any extra spaces and newline characters,
+        and returns the cleaned string. If the input is not a string, it returns the input as is.
+
+        :param row: The string from which symbols are to be removed.
+        :return: The cleaned string with extra spaces and newline characters removed.
         """
         if row and isinstance(row, str):
             row: str = re.sub(r" +", " ", row).strip()
@@ -139,10 +149,17 @@ class DKP(object):
 
     def get_probability_of_header(self, row: list, list_columns: list) -> int:
         """
-        Getting the probability of a row as a header.
-        :param row:
-        :param list_columns:
-        :return:
+        Calculates the probability that a given row is a header.
+
+        This method takes a row (a list of strings) and a list of column names,
+        removes any extra spaces and newline characters from the strings in the row,
+        and then counts how many of the strings in the row are in the list of column names.
+        The count is then divided by the length of the row, and the result is multiplied by 100
+        to get a percentage. The percentage is then returned as an integer.
+
+        :param row: The row to calculate the probability for.
+        :param list_columns: The list of column names.
+        :return: The probability that the given row is a header, as an integer between 0 and 100.
         """
         row: list = list(map(self.remove_symbols_in_columns, row))
         count: int = sum(element in list_columns for element in row)
@@ -150,12 +167,22 @@ class DKP(object):
 
     def get_columns_position(self, row: list, block_position: list, headers: dict, dict_columns_position) -> None:
         """
-        Get the position of each column in the file to process the row related to that column.
-        :param row:
-        :param headers:
-        :param block_position:
-        :param dict_columns_position:
-        :return:
+        Finds the position of all columns in a row.
+
+        This method takes a row, a range of columns (block_position), a dictionary of headers,
+        and a dictionary to store the positions of the columns.
+        It removes any extra spaces and newline characters from the strings in the row,
+        and then iterates over the strings in the row.
+        For each string, it checks if it matches any of the strings in the headers dictionary,
+        and if it does, it stores the index of the string in the row in the dict_columns_position dictionary.
+        The index is stored with the English name of the column as the key.
+
+        :param row: The row to find the columns in.
+        :param block_position: A list containing the start and end index of the block of columns to search in.
+        :param headers: A dictionary of headers, where the keys are the English names of the columns,
+                        and the values are lists of strings that may appear in the row as the header.
+        :param dict_columns_position: A dictionary to store the positions of the columns in.
+        :return: None
         """
         start_index, end_index = block_position
         row: list = list(map(self.remove_symbols_in_columns, row))
@@ -167,11 +194,19 @@ class DKP(object):
 
     def check_errors_in_columns(self, dict_columns: dict, message: str, error_code: int) -> None:
         """
-        Checks for the presence of all columns in the header.
-        :param dict_columns:
-        :param message:
-        :param error_code:
-        :return:
+        Checks if there are any empty columns in the given dictionary.
+
+        This method takes a dictionary of columns, a message, and an error code.
+        It checks if there are any empty columns in the dictionary (i.e., columns with a value of None).
+        If there are, it logs an error message with the error code, prints the error code to stderr,
+        sends a message to Telegram with the error code and the names of the empty columns,
+        and then exits with the error code.
+
+        :param dict_columns: A dictionary of columns, where the keys are the English names of the columns,
+                             and the values are the positions of the columns in the row.
+        :param message: The message to log and print in case of an error.
+        :param error_code: The error code to exit with in case of an error.
+        :return: None
         """
         if empty_columns := [key for key, value in dict_columns.items() if value is None]:
             logger.error(f"{message}. Empty columns - {empty_columns}")
@@ -184,9 +219,20 @@ class DKP(object):
 
     def check_errors_in_header(self, row: list) -> None:
         """
-        Checking for columns in the entire document, counting more than just columns on the same line.
-        :param row:
-        :return:
+        Checks if there are any empty columns in the header of the given row.
+
+        This method takes a row of the Excel file and checks if there are any empty columns in the header.
+        If there are, it logs an error message with the error code 2, prints the error code to stderr,
+        sends a message to Telegram with the error code and the names of the empty columns,
+        and then exits with the error code 2.
+
+        It also checks if there are any repeated columns in the header and if there are,
+        it logs an error message with the error code 2, prints the error code to stderr,
+        sends a message to Telegram with the error code and the names of the repeated columns,
+        and then exits with the error code 2.
+
+        :param row: The row of the Excel file to check.
+        :return: None
         """
         self.check_errors_in_columns(
             dict_columns=self.dict_block_position,
@@ -213,9 +259,15 @@ class DKP(object):
 
     def is_table_starting(self, row: list) -> bool:
         """
-        Understanding when a headerless table starts.
-        :param row:
-        :return:
+        Checks if the table is starting in the given row.
+
+        This method takes a row of the Excel file and checks if the table is starting in that row.
+        It does this by trying to get the value of the column "client" in the row.
+        If the column is not found, it returns False.
+        If the column is found, it returns the value of the column.
+
+        :param row: The row of the Excel file to check.
+        :return: The value of the column "client" if the table is starting in the row, False otherwise.
         """
         try:
             return row[self.dict_columns_position["client"]]
@@ -224,9 +276,17 @@ class DKP(object):
 
     def write_to_json(self, list_data: List[dict]) -> None:
         """
-        Writing data to json.
-        :param list_data:
-        :return:
+        Writes the given list of dictionaries to a JSON file.
+
+        This method takes a list of dictionaries and writes them to a JSON file.
+        The file is written to the same folder as the given Excel file.
+        The filename is the same as the Excel file, but with a `.json` extension instead of `.xls`.
+        If the list of dictionaries is empty, it logs an error message with the error code 4,
+        prints the error code to stderr, sends a message to Telegram with the error code and the name of the file,
+        and then exits with the error code.
+
+        :param list_data: The list of dictionaries to write to the JSON file.
+        :return: None
         """
         if not list_data:
             logger.error("Error code 4: length list equals 0!")
@@ -246,16 +306,22 @@ class DKP(object):
         metadata: dict
     ) -> dict:
         """
-        Getting values from columns in a table.
-        :param index:
-        :param index_month:
-        :param month_string:
-        :param row:
-        :param metadata:
-        :return:
+        Extracts and processes data from a row in a table, returning a dictionary of parsed values.
+
+        This function takes a row from a table and extracts various data points such as client details,
+        project information, and financial metrics. It uses a helper function `safe_strip` to clean and
+        convert the data appropriately. The parsed data is returned as a dictionary along with additional
+        metadata.
+
+        :param index: The index of the current row.
+        :param index_month: The numeric representation of the month.
+        :param month_string: The string representation of the month.
+        :param row: The list of values in the current row.
+        :param metadata: Additional metadata extracted earlier in the process.
+        :return: A dictionary containing parsed and processed data from the row.
         """
 
-        def safe_strip(value: str) -> Union[None, str, float, int]:
+        def safe_strip(value: str) -> Optional[str, float, int]:
             if not value:
                 return None
 
@@ -354,8 +420,15 @@ class DKP(object):
 
     def extract_metadata_from_filename(self) -> dict:
         """
-        Extracts department and year information from the file name.
-        :return:
+        Extract metadata from filename.
+
+        This method takes the filename of the given Excel file and extracts metadata from it.
+        It matches the department and year from the filename and logs an error with the error code 10
+        if the department is not found and an error with the error code 1 if the year is not found.
+        Then it sends a message to Telegram with the error code and the filename
+        if an error occurs and exits with the error code.
+
+        :return: A dictionary with the extracted metadata.
         """
         logger.info(f'File - {self.basename_filename}. Datetime - {datetime.now()}')
         # Match department
@@ -378,10 +451,14 @@ class DKP(object):
 
     def send_error(self, message: str, error_code: int) -> None:
         """
-        Send error.
-        :param message:
-        :param error_code:
-        :return:
+        Sends an error message to the logger and Telegram, then exits with the given error code.
+
+        This method takes a message and an error code, appends the current file's basename to the message,
+        logs the error message, sends it to Telegram, and exits the program with the specified error code.
+
+        :param message: The error message to log and send.
+        :param error_code: The error code to exit with.
+        :return: None
         """
         error_message: str = f"{message}{self.basename_filename}"
         logger.error(error_message)
@@ -390,10 +467,20 @@ class DKP(object):
 
     def parse_sheet(self, df: pd.DataFrame, coefficient_of_header: int = 3) -> None:
         """
-        Parse sheet.
-        :param df:
-        :param coefficient_of_header:
-        :return:
+        Parse a sheet of Excel file.
+
+        This method takes a pandas DataFrame, representing a sheet of the Excel file,
+        and parses it, extracting metadata from the filename,
+        identifying the header and the table, and extracting content from the table.
+        It then writes the extracted content to a JSON file.
+
+        If an error occurs during processing, it logs an error message with the error code 5,
+        sends a message to Telegram with the error code and the filename,
+        and then exits with the error code 5.
+
+        :param df: The pandas DataFrame representing the sheet of the Excel file.
+        :param coefficient_of_header: The coefficient to determine if a row is a header or not.
+        :return: None
         """
         list_data: list = []
         metadata: dict = self.extract_metadata_from_filename()
@@ -420,11 +507,18 @@ class DKP(object):
 
     def main(self) -> None:
         """
-        Main function.
-        :return:
+        The main method of the class.
+
+        This method reads the Excel file given by the filename, extracts the needed sheet,
+        parses the sheet, and writes the extracted data to a JSON file.
+
+        If an error occurs during processing, it logs an error message,
+        sends a message to Telegram with the error message,
+        and exits with the error code 1.
+        :return: None
         """
         try:
-            sheets = pd.ExcelFile(self.filename).sheet_names
+            sheets: list = pd.ExcelFile(self.filename).sheet_names
             logger.info(f"Sheets is {sheets}")
             needed_sheet: list = [sheet for sheet in sheets if sheet in SHEETS_NAME]
             if len(needed_sheet) > 1:

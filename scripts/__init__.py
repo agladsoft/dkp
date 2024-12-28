@@ -12,6 +12,12 @@ load_dotenv()
 
 
 def get_my_env_var(var_name: str) -> str:
+    """
+    Retrieves the value of the given environment variable.
+    :param var_name: The name of the environment variable to retrieve.
+    :return: The value of the given environment variable.
+    :raises MissingEnvironmentVariable: If the given environment variable does not exist.
+    """
     try:
         return os.environ[var_name]
     except KeyError as e:
@@ -25,6 +31,22 @@ def group_columns(
     filter_key: int = None,
     filter_value: str = None
 ):
+    """
+    Groups columns of a given `reference` by a given `group_index` and then by a given `column_index`.
+
+    If `filter_key` and `filter_value` are provided, it filters the rows of `reference` that have the value
+    `filter_value` in the column with index `filter_key`.
+
+    :param reference: The sequence of rows to group.
+    :param group_index: The index of the column to group the rows by.
+    :param column_index: The index of the column to group by after grouping by `group_index`.
+    :param filter_key: The index of the column to filter the rows by.
+    :param filter_value: The value of the column with index `filter_key` to filter the rows by.
+    :return: A dictionary of dictionaries, where the keys of the outer dictionary are the values of the column
+             with index `group_index`, and the keys of the inner dictionaries are the values of the column with
+             index `column_index`, and the values of the inner dictionaries are tuples of the values of the column
+             with index `column_index`.
+    """
     result: dict = {}
     for row in reference:
         if filter_key is None or row[filter_key] == filter_value:
@@ -43,6 +65,24 @@ def group_nested_columns(
     filter_key: int,
     filter_value: str
 ):
+    """
+    Groups nested columns of a given `reference` by specified indices.
+
+    This function processes a sequence of rows and groups them hierarchically based on the values at
+    specified indices. It first groups the rows by `block_index` and within each block, it groups by `group_index`.
+    It filters the rows using a specified `filter_key` and `filter_value`, only including rows
+    that match the filter criteria.
+
+    :param reference: The sequence of rows to group.
+    :param block_index: The index of the column to group the blocks by.
+    :param group_index: The index of the column to group within each block.
+    :param column_index: The index of the column whose values are to be collected in the groups.
+    :param filter_key: The index of the column to filter the rows by.
+    :param filter_value: The value that the column at `filter_key` must equal for a row to be included.
+    :return: A nested dictionary where the outer keys correspond to unique values of the column at `block_index`,
+             the inner keys correspond to unique values of the column at `group_index`, and the inner values
+             are tuples of values from the column at `column_index`.
+    """
     result: dict = {}
     for row in reference:
         if row[filter_key] == filter_value:
