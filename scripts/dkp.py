@@ -14,7 +14,7 @@ logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".
 
 class JsonEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, DKP):
+        if hasattr(obj, '__dict__'):
             return obj.__dict__
         return json.JSONEncoder.default(self, obj)
 
@@ -255,13 +255,22 @@ class DKP(object):
         :return:
         """
 
-        def safe_strip(value):
-            if value:
-                value = value.strip()  # Сначала убираем лишние пробелы
-                if self.is_digit(value):
-                    return float(value) if '.' in value else int(value)  # Проверка на тип данных
-                return value
-            return None
+        def safe_strip(value: str) -> Union[None, str, float, int]:
+            if not value:
+                return None
+
+            stripped_value = value.strip()  # Сначала убираем лишние пробелы
+            if not self.is_digit(stripped_value):
+                return stripped_value
+
+            try:
+                return float(stripped_value) if '.' in stripped_value else int(stripped_value)
+            except (ValueError, TypeError) as e:
+                logger.warning(
+                    f"Failed to convert value '{stripped_value}' to number: {str(e)}. "
+                    f"Returning original stripped string."
+                )
+                return stripped_value
 
         logger.info(f'row {index} is {row}')
         parsed_record: dict = {
