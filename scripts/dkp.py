@@ -90,7 +90,7 @@ class DKP(object):
         }
 
     @staticmethod
-    def is_digit(x: str) -> bool:
+    def _is_digit(x: str) -> bool:
         """
         Checks if a given string can be converted to a float.
         :param x: The string to check.
@@ -103,7 +103,7 @@ class DKP(object):
             return False
 
     @staticmethod
-    def merge_two_dicts(x: Dict, y: Dict) -> dict:
+    def _merge_two_dicts(x: Dict, y: Dict) -> dict:
         """
         Merge two dictionaries, x and y, into a new dictionary, z.
         The values in y will overwrite the values in x if there are any keys in common.
@@ -132,7 +132,7 @@ class DKP(object):
         return list_columns
 
     @staticmethod
-    def remove_symbols_in_columns(row: Optional[str]) -> str:
+    def _remove_symbols_in_columns(row: Optional[str]) -> str:
         """
         Removes extra spaces and newline characters from a string.
 
@@ -147,7 +147,7 @@ class DKP(object):
             row: str = re.sub(r"\n", " ", row).strip()
         return row
 
-    def get_probability_of_header(self, row: list, list_columns: list) -> int:
+    def _get_probability_of_header(self, row: list, list_columns: list) -> int:
         """
         Calculates the probability that a given row is a header.
 
@@ -161,7 +161,7 @@ class DKP(object):
         :param list_columns: The list of column names.
         :return: The probability that the given row is a header, as an integer between 0 and 100.
         """
-        row: list = list(map(self.remove_symbols_in_columns, row))
+        row: list = list(map(self._remove_symbols_in_columns, row))
         count: int = sum(element in list_columns for element in row)
         return int(count / len(row) * 100)
 
@@ -185,7 +185,7 @@ class DKP(object):
         :return: None
         """
         start_index, end_index = block_position
-        row: list = list(map(self.remove_symbols_in_columns, row))
+        row: list = list(map(self._remove_symbols_in_columns, row))
         for index, col in enumerate(row):
             for eng_column, columns in headers.items():
                 for column_eng in columns:
@@ -257,7 +257,7 @@ class DKP(object):
             error_code=2
         )
 
-    def is_table_starting(self, row: list) -> bool:
+    def _is_table_starting(self, row: list) -> bool:
         """
         Checks if the table is starting in the given row.
 
@@ -326,7 +326,7 @@ class DKP(object):
                 return None
 
             stripped_value = value.strip()  # Сначала убираем лишние пробелы
-            if not self.is_digit(stripped_value):
+            if not self._is_digit(stripped_value):
                 return stripped_value
 
             try:
@@ -416,7 +416,7 @@ class DKP(object):
             "original_file_parsed_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        return self.merge_two_dicts(metadata, parsed_record)
+        return self._merge_two_dicts(metadata, parsed_record)
 
     def extract_metadata_from_filename(self) -> dict:
         """
@@ -488,11 +488,11 @@ class DKP(object):
         index: Union[int, Hashable]
         for index, row in df.iterrows():
             row = list(row.to_dict().values())
-            if self.get_probability_of_header(row, list_columns) > coefficient_of_header:
+            if self._get_probability_of_header(row, list_columns) > coefficient_of_header:
                 self.check_errors_in_header(row)
             elif not self.dict_columns_position["client"]:
                 self.get_columns_position(row, [0, len(row)], BLOCK_NAMES, self.dict_block_position)
-            elif self.is_table_starting(row):
+            elif self._is_table_starting(row):
                 try:
                     list_data.extend(
                         self.get_content_in_table(index, index_month, month_string, row, metadata)
