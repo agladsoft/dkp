@@ -1,0 +1,66 @@
+@startuml
+
+package "dkp_py" {
+
+    class DKP {
+        + filename: str
+        + basename_filename: str
+        + folder: str
+        + dict_columns_position: Dict[str, Optional[int]]
+
+        + init(filename: str, folder: str)
+        + main()
+        + parse_sheet(df: DataFrame, coefficient_of_header: int = 3)
+        + extract_metadata_from_filename()
+        + send_error(message: str, error_code: int)
+        + _get_list_columns()
+        + get_probability_of_header(row: list, list_columns: list)
+        + remove_symbols_in_columns(row: Optional[str])
+        + get_columns_position(row: list, block_position: list, headers: dict, dict_columns_position)
+        + check_errors_in_header(row: list)
+        + check_errors_in_columns(dict_columns: dict, message: str, error_code: int)
+        + is_table_starting(row: list)
+        + get_content_in_table(index: Union[int, Hashable], index_month: int, month_string, row: list, metadata: dict)
+        + is_digit(x: str)
+        + merge_two_dicts(x: Dict, y: Dict)
+        + write_to_json(list_data: List[dict])
+    }
+
+
+    class JsonEncoder {
+        default(self, obj)
+    }
+
+}
+
+DKP --> JsonEncoder : uses
+
+@enduml
+
+
+
+@startuml
+
+participant User
+participant DKP
+participant ExcelFile
+participant Logger
+participant Telegram
+
+User->>DKP: Initiate file processing
+DKP->>ExcelFile: Read Excel file
+DKP->>DKP: Extract metadata from filename
+DKP->>DKP: Identify sheet and header
+loop For each row in sheet
+    DKP->>DKP: Process row data
+    DKP->>DKP: Extract content
+end
+DKP->>DKP: Write processed data to JSON
+alt Processing successful
+    Logger->>Logger: Log success
+else Processing failed
+    Logger->>Logger: Log error
+    Telegram->>Telegram: Send error notification
+end
+
+@enduml
