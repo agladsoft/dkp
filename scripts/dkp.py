@@ -13,7 +13,6 @@ logger: app_logger = app_logger.get_logger(os.path.basename(__file__).replace(".
 
 
 class JsonEncoder(json.JSONEncoder):
-
     def default(self, obj):
         if isinstance(obj, DKP):
             return obj.__dict__
@@ -107,8 +106,8 @@ class DKP(object):
     def merge_two_dicts(x: Dict, y: Dict) -> dict:
         """
         Merges two dictionaries.
-        :param x:
-        :param y:
+        :param x: One dict.
+        :param y: Two dict.
         :return:
         """
         z: Dict = x.copy()  # start with keys and values of x
@@ -166,20 +165,21 @@ class DKP(object):
                     if col == column_eng and start_index <= index < end_index:
                         dict_columns_position[eng_column] = index
 
-    def check_errors_in_columns(self, list_columns: list, dict_columns: dict, message: str, error_code: int) -> None:
+    def check_errors_in_columns(self, dict_columns: dict, message: str, error_code: int) -> None:
         """
         Checks for the presence of all columns in the header.
-        :param list_columns:
         :param dict_columns:
         :param message:
         :param error_code:
         :return:
         """
-        if not all(i for i in list_columns if i is None):
-            logger.error(message)
-            logger.error(dict_columns)
+        if empty_columns := [key for key, value in dict_columns.items() if value is None]:
+            logger.error(f"{message}. Empty columns - {empty_columns}")
             print(f"{error_code}", file=sys.stderr)
-            telegram(f"Ошибка при обработке файла {self.basename_filename}, код ошибки {error_code}")
+            telegram(
+                f"Ошибка при обработке файла {self.basename_filename}. "
+                f"Код ошибки - {error_code}. Пустые поля - {empty_columns}"
+            )
             sys.exit(error_code)
 
     def check_errors_in_header(self, row: list) -> None:
@@ -189,7 +189,6 @@ class DKP(object):
         :return:
         """
         self.check_errors_in_columns(
-            list_columns=list(self.dict_block_position.values()),
             dict_columns=self.dict_block_position,
             message="Error code 2: Block columns not in file or changed",
             error_code=2
@@ -207,7 +206,6 @@ class DKP(object):
                 self.get_columns_position(row, block_position, repeated_column, self.dict_columns_position)
 
         self.check_errors_in_columns(
-            list_columns=list(self.dict_columns_position.values()),
             dict_columns=self.dict_columns_position,
             message="Error code 2: Column not in file or changed",
             error_code=2
