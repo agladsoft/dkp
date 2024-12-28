@@ -213,7 +213,7 @@ class DKP(object):
             print(f"{error_code}", file=sys.stderr)
             telegram(
                 f"Ошибка при обработке файла {self.basename_filename}. "
-                f"Код ошибки - {error_code}. Пустые поля - {empty_columns}"
+                f"Код ошибки - {error_code}. Ненайденные поля - {empty_columns}"
             )
             sys.exit(error_code)
 
