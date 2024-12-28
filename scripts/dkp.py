@@ -347,6 +347,7 @@ class DKP(object):
             "direction": safe_strip(row[self.dict_columns_position["direction"]]),
             "bay": safe_strip(row[self.dict_columns_position["bay"]]),
             "owner": safe_strip(row[self.dict_columns_position["owner"]]),
+            "container_size": safe_strip(row[self.dict_columns_position["container_size"]]),
             "month": index_month,
             "month_string": month_string,
             "date": f"{metadata['year']}-{index_month:02d}-01",
