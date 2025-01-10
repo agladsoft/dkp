@@ -24,6 +24,7 @@ class DKP(object):
         self.filename: str = filename
         self.basename_filename: str = os.path.basename(filename)
         self.folder: str = folder
+        self.floating_columns: list = ["description"]
         self.dict_columns_position: Dict[str, Optional[int]] = {
             "client": None,
             "description": None,
@@ -192,7 +193,7 @@ class DKP(object):
                     if col == column_eng and start_index <= index < end_index:
                         dict_columns_position[eng_column] = index
 
-    def check_errors_in_columns(self, dict_columns: dict, message: str, error_code: int) -> None:
+    def check_errors_in_columns(self, dict_columns: dict, message: str) -> None:
         """
         Checks if there are any empty columns in the given dictionary.
 
@@ -205,17 +206,16 @@ class DKP(object):
         :param dict_columns: A dictionary of columns, where the keys are the English names of the columns,
                              and the values are the positions of the columns in the row.
         :param message: The message to log and print in case of an error.
-        :param error_code: The error code to exit with in case of an error.
         :return: None
         """
         if empty_columns := [key for key, value in dict_columns.items() if value is None]:
             logger.error(f"{message}. Empty columns - {empty_columns}")
-            print(f"{error_code}", file=sys.stderr)
+            print("2", file=sys.stderr)
             telegram(
-                f"Ошибка при обработке файла {self.basename_filename}. "
-                f"Код ошибки - {error_code}. Ненайденные поля - {empty_columns}"
+                f"Error code 2: {message}! Не были найдены следующие поля - {empty_columns}! "
+                f"Файл: {self.basename_filename}"
             )
-            sys.exit(error_code)
+            sys.exit(2)
 
     def check_errors_in_header(self, row: list) -> None:
         """
@@ -236,8 +236,7 @@ class DKP(object):
         """
         self.check_errors_in_columns(
             dict_columns=self.dict_block_position,
-            message="Error code 2: Block columns not in file or changed",
-            error_code=2
+            message="Блоки текста отсутствуют в файле или изменены"
         )
         self.get_columns_position(row, [0, len(row)], COLUMN_NAMES, self.dict_columns_position)
 
@@ -251,10 +250,13 @@ class DKP(object):
             if repeated_column := BLOCK_TABLE_COLUMNS.get(col):
                 self.get_columns_position(row, block_position, repeated_column, self.dict_columns_position)
 
+        dict_columns_position: dict = self.dict_columns_position.copy()
+        for delete_column in self.floating_columns:
+            del dict_columns_position[delete_column]
+
         self.check_errors_in_columns(
-            dict_columns=self.dict_columns_position,
-            message="Error code 2: Column not in file or changed",
-            error_code=2
+            dict_columns=dict_columns_position,
+            message="Столбцы отсутствуют в файле или изменены"
         )
 
     def _is_table_starting(self, row: list) -> bool:
@@ -291,7 +293,7 @@ class DKP(object):
         if not list_data:
             logger.error("Error code 4: length list equals 0!")
             print("4", file=sys.stderr)
-            telegram(f"В Файле {self.basename_filename}: Отсутствуют данные : Error code 4: length list equals 0!")
+            telegram(f"Error code 4: В Файле отсутствуют данные! Файл: {self.basename_filename}")
             sys.exit(4)
         output_file_path = os.path.join(self.folder, f'{self.basename_filename}.json')
         with open(output_file_path, 'w', encoding='utf-8') as f:
@@ -321,7 +323,11 @@ class DKP(object):
         :return: A dictionary containing parsed and processed data from the row.
         """
 
-        def safe_strip(value: str) -> Union[str, float, int, None]:
+        def safe_strip(rows: list, column: str) -> Union[str, float, int, None]:
+            if self.dict_columns_position[column] is None:
+                return None
+
+            value: Optional[str] = rows[self.dict_columns_position[column]]
             if not value:
                 return None
 
@@ -340,78 +346,76 @@ class DKP(object):
 
         logger.info(f'row {index} is {row}')
         parsed_record: dict = {
-            "client": safe_strip(row[self.dict_columns_position["client"]]),
-            "description": safe_strip(row[self.dict_columns_position["description"]]),
-            "project": safe_strip(row[self.dict_columns_position["project"]]),
-            "cargo": safe_strip(row[self.dict_columns_position["cargo"]]),
-            "direction": safe_strip(row[self.dict_columns_position["direction"]]),
-            "bay": safe_strip(row[self.dict_columns_position["bay"]]),
-            "owner": safe_strip(row[self.dict_columns_position["owner"]]),
-            "container_size": safe_strip(row[self.dict_columns_position["container_size"]]),
+            "client": safe_strip(row, "client"),
+            "description": safe_strip(row, "description"),
+            "project": safe_strip(row, "project"),
+            "cargo": safe_strip(row, "cargo"),
+            "direction": safe_strip(row, "direction"),
+            "bay": safe_strip(row, "bay"),
+            "owner": safe_strip(row, "owner"),
+            "container_size": safe_strip(row, "container_size"),
             "month": index_month,
             "month_string": month_string,
             "date": f"{metadata['year']}-{index_month:02d}-01",
 
             "container_count": next((
-                safe_strip(row[self.dict_columns_position[key]])
+                safe_strip(row, key)
                 for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_ktk"].items()
                 if month_string in val
             ), None),
             "teu": next((
-                safe_strip(row[self.dict_columns_position[key]])
+                safe_strip(row, key)
                 for key, val in BLOCK_TABLE_COLUMNS["natural_indicators_teus"].items()
                 if month_string in val
             ), None),
 
-            "unit_margin_income_marine": safe_strip(row[self.dict_columns_position["unit_margin_income_marine"]]),
-            "unit_margin_income_port": safe_strip(row[self.dict_columns_position["unit_margin_income_port"]]),
-            "unit_margin_income_terminal1": safe_strip(row[self.dict_columns_position["unit_margin_income_terminal1"]]),
-            "unit_margin_income_terminal2": safe_strip(row[self.dict_columns_position["unit_margin_income_terminal2"]]),
-            "unit_margin_income_other_terminal": safe_strip(
-                row[self.dict_columns_position["unit_margin_income_other_terminal"]]
-            ),
-            "unit_margin_income_avto1": safe_strip(row[self.dict_columns_position["unit_margin_income_avto1"]]),
-            "unit_margin_income_avto2": safe_strip(row[self.dict_columns_position["unit_margin_income_avto2"]]),
-            "unit_margin_income_avto3": safe_strip(row[self.dict_columns_position["unit_margin_income_avto3"]]),
-            "unit_margin_income_rzhd1": safe_strip(row[self.dict_columns_position["unit_margin_income_rzhd1"]]),
-            "unit_margin_income_rzhd2": safe_strip(row[self.dict_columns_position["unit_margin_income_rzhd2"]]),
-            "unit_margin_income_custom": safe_strip(row[self.dict_columns_position["unit_margin_income_custom"]]),
-            "unit_margin_income_demurrage": safe_strip(row[self.dict_columns_position["unit_margin_income_demurrage"]]),
-            "unit_margin_income_storage": safe_strip(row[self.dict_columns_position["unit_margin_income_storage"]]),
-            "unit_margin_income_other1": safe_strip(row[self.dict_columns_position["unit_margin_income_other1"]]),
-            "unit_margin_income_other2": safe_strip(row[self.dict_columns_position["unit_margin_income_other2"]]),
+            "unit_margin_income_marine": safe_strip(row, "unit_margin_income_marine"),
+            "unit_margin_income_port": safe_strip(row, "unit_margin_income_port"),
+            "unit_margin_income_terminal1": safe_strip(row, "unit_margin_income_terminal1"),
+            "unit_margin_income_terminal2": safe_strip(row, "unit_margin_income_terminal2"),
+            "unit_margin_income_other_terminal": safe_strip(row, "unit_margin_income_other_terminal"),
+            "unit_margin_income_avto1": safe_strip(row, "unit_margin_income_avto1"),
+            "unit_margin_income_avto2": safe_strip(row, "unit_margin_income_avto2"),
+            "unit_margin_income_avto3": safe_strip(row, "unit_margin_income_avto3"),
+            "unit_margin_income_rzhd1": safe_strip(row, "unit_margin_income_rzhd1"),
+            "unit_margin_income_rzhd2": safe_strip(row, "unit_margin_income_rzhd2"),
+            "unit_margin_income_custom": safe_strip(row, "unit_margin_income_custom"),
+            "unit_margin_income_demurrage": safe_strip(row, "unit_margin_income_demurrage"),
+            "unit_margin_income_storage": safe_strip(row, "unit_margin_income_storage"),
+            "unit_margin_income_other1": safe_strip(row, "unit_margin_income_other1"),
+            "unit_margin_income_other2": safe_strip(row, "unit_margin_income_other2"),
 
-            "service_marine": safe_strip(row[self.dict_columns_position["service_marine"]]),
-            "service_port": safe_strip(row[self.dict_columns_position["service_port"]]),
-            "service_terminal1": safe_strip(row[self.dict_columns_position["service_terminal1"]]),
-            "service_terminal2": safe_strip(row[self.dict_columns_position["service_terminal2"]]),
-            "service_other_terminal": safe_strip(row[self.dict_columns_position["service_other_terminal"]]),
-            "service_avto1": safe_strip(row[self.dict_columns_position["service_avto1"]]),
-            "service_avto2": safe_strip(row[self.dict_columns_position["service_avto2"]]),
-            "service_avto3": safe_strip(row[self.dict_columns_position["service_avto3"]]),
-            "service_rzhd1": safe_strip(row[self.dict_columns_position["service_rzhd1"]]),
-            "service_rzhd2": safe_strip(row[self.dict_columns_position["service_rzhd2"]]),
-            "service_custom": safe_strip(row[self.dict_columns_position["service_custom"]]),
-            "service_demurrage": safe_strip(row[self.dict_columns_position["service_demurrage"]]),
-            "service_storage": safe_strip(row[self.dict_columns_position["service_storage"]]),
-            "service_other1": safe_strip(row[self.dict_columns_position["service_other1"]]),
-            "service_other2": safe_strip(row[self.dict_columns_position["service_other2"]]),
+            "service_marine": safe_strip(row, "service_marine"),
+            "service_port": safe_strip(row, "service_port"),
+            "service_terminal1": safe_strip(row, "service_terminal1"),
+            "service_terminal2": safe_strip(row, "service_terminal2"),
+            "service_other_terminal": safe_strip(row, "service_other_terminal"),
+            "service_avto1": safe_strip(row, "service_avto1"),
+            "service_avto2": safe_strip(row, "service_avto2"),
+            "service_avto3": safe_strip(row, "service_avto3"),
+            "service_rzhd1": safe_strip(row, "service_rzhd1"),
+            "service_rzhd2": safe_strip(row, "service_rzhd2"),
+            "service_custom": safe_strip(row, "service_custom"),
+            "service_demurrage": safe_strip(row, "service_demurrage"),
+            "service_storage": safe_strip(row, "service_storage"),
+            "service_other1": safe_strip(row, "service_other1"),
+            "service_other2": safe_strip(row, "service_other2"),
 
-            "co_executor_marine": safe_strip(row[self.dict_columns_position["co_executor_marine"]]),
-            "co_executor_port": safe_strip(row[self.dict_columns_position["co_executor_port"]]),
-            "co_executor_terminal1": safe_strip(row[self.dict_columns_position["co_executor_terminal1"]]),
-            "co_executor_terminal2": safe_strip(row[self.dict_columns_position["co_executor_terminal2"]]),
-            "co_executor_other_terminal": safe_strip(row[self.dict_columns_position["co_executor_other_terminal"]]),
-            "co_executor_avto1": safe_strip(row[self.dict_columns_position["co_executor_avto1"]]),
-            "co_executor_avto2": safe_strip(row[self.dict_columns_position["co_executor_avto2"]]),
-            "co_executor_avto3": safe_strip(row[self.dict_columns_position["co_executor_avto3"]]),
-            "co_executor_rzhd1": safe_strip(row[self.dict_columns_position["co_executor_rzhd1"]]),
-            "co_executor_rzhd2": safe_strip(row[self.dict_columns_position["co_executor_rzhd2"]]),
-            "co_executor_custom": safe_strip(row[self.dict_columns_position["co_executor_custom"]]),
-            "co_executor_demurrage": safe_strip(row[self.dict_columns_position["co_executor_demurrage"]]),
-            "co_executor_storage": safe_strip(row[self.dict_columns_position["co_executor_storage"]]),
-            "co_executor_other1": safe_strip(row[self.dict_columns_position["co_executor_other1"]]),
-            "co_executor_other2": safe_strip(row[self.dict_columns_position["co_executor_other2"]]),
+            "co_executor_marine": safe_strip(row, "co_executor_marine"),
+            "co_executor_port": safe_strip(row, "co_executor_port"),
+            "co_executor_terminal1": safe_strip(row, "co_executor_terminal1"),
+            "co_executor_terminal2": safe_strip(row, "co_executor_terminal2"),
+            "co_executor_other_terminal": safe_strip(row, "co_executor_other_terminal"),
+            "co_executor_avto1": safe_strip(row, "co_executor_avto1"),
+            "co_executor_avto2": safe_strip(row, "co_executor_avto2"),
+            "co_executor_avto3": safe_strip(row, "co_executor_avto3"),
+            "co_executor_rzhd1": safe_strip(row, "co_executor_rzhd1"),
+            "co_executor_rzhd2": safe_strip(row, "co_executor_rzhd2"),
+            "co_executor_custom": safe_strip(row, "co_executor_custom"),
+            "co_executor_demurrage": safe_strip(row, "co_executor_demurrage"),
+            "co_executor_storage": safe_strip(row, "co_executor_storage"),
+            "co_executor_other1": safe_strip(row, "co_executor_other1"),
+            "co_executor_other2": safe_strip(row, "co_executor_other2"),
 
             "original_file_name": self.basename_filename,
             "original_file_parsed_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -437,14 +441,14 @@ class DKP(object):
         department_match: Match = re.search(rf'{dkp_pattern}', self.basename_filename)
         if not department_match:
             self.send_error(
-                message='Error code 10: Department not in file name! File: ', error_code=10
+                message='Error code 10: Department не указан в файле! Файл:', error_code=10
             )
         metadata: dict = {'department': department_match.group(0)}
         # Match year
         year_match: Match = re.search(r'\d{4}', self.basename_filename)
         if not year_match:
             self.send_error(
-                message='Error code 1: Year not in file name! File: ', error_code=1
+                message='Error code 1: Год не указан в файле! Файл:', error_code=1
             )
         metadata['year'] = int(year_match.group(0))
 
@@ -461,7 +465,7 @@ class DKP(object):
         :param error_code: The error code to exit with.
         :return: None
         """
-        error_message: str = f"{message}{self.basename_filename}"
+        error_message: str = f"{message} {self.basename_filename}"
         logger.error(error_message)
         telegram(error_message)
         sys.exit(error_code)
@@ -501,8 +505,8 @@ class DKP(object):
                     )
                 except (IndexError, ValueError, TypeError) as exception:
                     telegram(
-                        f"Ошибка возникла в строке {index + 1}. "
-                        f"Файл - {self.basename_filename}. Exception - {exception}"
+                        f"Error code 5: Ошибка возникла в строке {index + 1}! "
+                        f"Файл: {self.basename_filename}. Exception - {exception}"
                     )
                     logger.error(f"Error code 5: error processing in row {index + 1}! Exception - {exception}")
                     print(f"5_in_row_{index + 1}", file=sys.stderr)
@@ -533,9 +537,9 @@ class DKP(object):
                 self.parse_sheet(df)
         except Exception as exception:
             logger.error(f"Ошибка при чтении файла {self.basename_filename}: {exception}")
-            telegram(f'Ошибка при обработке файла {self.basename_filename}. Ошибка : {exception}')
+            telegram(f'Error code 6: Ошибка при обработке файла! Файл: {self.basename_filename}! Ошибка: {exception}')
             print("unknown", file=sys.stderr)
-            sys.exit(1)
+            sys.exit(6)
 
 
 if __name__ == "__main__":

@@ -150,11 +150,11 @@ MONTH_NAMES: list = ["янв", "фев", "мар", "апр", "май", "июн",
 
 
 def telegram(message) -> int:
-    url: str = f"https://api.telegram.org/bot{os.environ['TOKEN_TELEGRAM']}/sendMessage"
+    url: str = f"https://api.telegram.org/bot{get_my_env_var('TOKEN_TELEGRAM')}/sendMessage"
     params: dict = {
-        "chat_id": f"{os.environ['CHAT_ID']}/{os.environ['TOPIC']}",
+        "chat_id": f"{get_my_env_var('CHAT_ID')}/{get_my_env_var('TOPIC')}",
         "text": message,
-        "reply_to_message_id": os.environ['ID']
+        "reply_to_message_id": get_my_env_var('ID')
     }
     response: Response = requests.get(url, params=params)
     return response.status_code
