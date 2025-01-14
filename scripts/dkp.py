@@ -132,7 +132,7 @@ class DKP(object):
         }
         self.dict_block_position: Dict[str, Optional[int]] = {
             "natural_indicators_ktk": None,
-            "unit_rates_co_executors": None,
+            "co_executor_rate_per_unite": None,
             "unit_margin_income": None,
             "service": None,
             "co_executor": None,
