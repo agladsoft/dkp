@@ -400,7 +400,7 @@ class DKP(object):
         :return: A dictionary containing parsed and processed data from the row.
         """
 
-        def safe_strip(rows: list, column: str) -> Union[str, float, int, None]:
+        def safe_strip(rows: list, column: str) -> Union[str, float, int, bool, None]:
             if self.dict_columns_position[column] is None:
                 return None
 
@@ -408,7 +408,16 @@ class DKP(object):
             if not value:
                 return None
 
-            stripped_value = value.strip()  # Сначала убираем лишние пробелы
+            stripped_value: str = value.strip()
+
+            # Приведение к булевому значению
+            lower_value: str = stripped_value.lower()
+            if lower_value in {"да", "yes"}:
+                return True
+            elif lower_value in {"нет", "no"}:
+                return False
+
+            # Проверка, является ли значение числом
             if not self._is_digit(stripped_value):
                 return stripped_value
 
