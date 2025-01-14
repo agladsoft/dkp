@@ -24,7 +24,29 @@ class DKP(object):
         self.filename: str = filename
         self.basename_filename: str = os.path.basename(filename)
         self.folder: str = folder
-        self.floating_columns: list = ["description"]
+        self.floating_columns: list = [
+            "description",
+            "co_executor_rate_per_unite_separation",
+            "co_executor_rate_per_unite_fee",
+            "co_executor_rate_per_unite_value_money",
+            "co_executor_rate_per_unite_tax",
+            "unit_margin_income_separation",
+            "unit_margin_income_fee",
+            "unit_margin_income_value_money",
+            "unit_margin_income_tax",
+            "service_separation",
+            "service_fee",
+            "service_value_money",
+            "service_tax",
+            "co_executor_separation",
+            "co_executor_fee",
+            "co_executor_value_money",
+            "co_executor_tax",
+            "reimbursable_sign_76_separation",
+            "reimbursable_sign_76_fee",
+            "reimbursable_sign_76_value_money",
+            "reimbursable_sign_76_tax"
+        ]
         self.dict_columns_position: Dict[str, Optional[int]] = {
             "client": None,
             "description": None,
@@ -34,6 +56,7 @@ class DKP(object):
             "bay": None,
             "owner": None,
             "container_size": None,
+
             "co_executor_rate_per_unite_marine": None,
             "co_executor_rate_per_unite_port": None,
             "co_executor_rate_per_unite_terminal1": None,
@@ -53,6 +76,7 @@ class DKP(object):
             "co_executor_rate_per_unite_fee": None,
             "co_executor_rate_per_unite_value_money": None,
             "co_executor_rate_per_unite_tax": None,
+
             "unit_margin_income_marine": None,
             "unit_margin_income_port": None,
             "unit_margin_income_terminal1": None,
@@ -72,6 +96,7 @@ class DKP(object):
             "unit_margin_income_fee": None,
             "unit_margin_income_value_money": None,
             "unit_margin_income_tax": None,
+
             "service_marine": None,
             "service_port": None,
             "service_terminal1": None,
@@ -91,6 +116,7 @@ class DKP(object):
             "service_fee": None,
             "service_value_money": None,
             "service_tax": None,
+
             "co_executor_marine": None,
             "co_executor_port": None,
             "co_executor_terminal1": None,
@@ -110,6 +136,7 @@ class DKP(object):
             "co_executor_fee": None,
             "co_executor_value_money": None,
             "co_executor_tax": None,
+
             "reimbursable_sign_76_marine": None,
             "reimbursable_sign_76_port": None,
             "reimbursable_sign_76_terminal1": None,
