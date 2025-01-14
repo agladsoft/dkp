@@ -110,7 +110,7 @@ client: Client = get_client(
 reference_dkp: Sequence = client.query("SELECT * FROM reference_dkp").result_rows
 
 SHEETS_NAME: list = [column[2] for column in reference_dkp if column[0] == "Наименования листов"]
-DKP_NAMES: list = [column[2] for column in reference_dkp if column[0] == "Наименования в файле"]
+DKP_NAMES: dict = {column[2]: column[3] for column in reference_dkp if column[0] == "Наименования в файле"}
 
 COLUMN_NAMES: dict = group_columns(
     reference=reference_dkp,
