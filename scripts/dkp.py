@@ -34,6 +34,25 @@ class DKP(object):
             "bay": None,
             "owner": None,
             "container_size": None,
+            "co_executor_rate_per_unite_marine": None,
+            "co_executor_rate_per_unite_port": None,
+            "co_executor_rate_per_unite_terminal1": None,
+            "co_executor_rate_per_unite_terminal2": None,
+            "co_executor_rate_per_unite_other_terminal": None,
+            "co_executor_rate_per_unite_avto1": None,
+            "co_executor_rate_per_unite_avto2": None,
+            "co_executor_rate_per_unite_avto3": None,
+            "co_executor_rate_per_unite_rzhd1": None,
+            "co_executor_rate_per_unite_rzhd2": None,
+            "co_executor_rate_per_unite_custom": None,
+            "co_executor_rate_per_unite_demurrage": None,
+            "co_executor_rate_per_unite_storage": None,
+            "co_executor_rate_per_unite_other1": None,
+            "co_executor_rate_per_unite_other2": None,
+            "co_executor_rate_per_unite_separation": None,
+            "co_executor_rate_per_unite_fee": None,
+            "co_executor_rate_per_unite_value_money": None,
+            "co_executor_rate_per_unite_tax": None,
             "unit_margin_income_marine": None,
             "unit_margin_income_port": None,
             "unit_margin_income_terminal1": None,
@@ -49,6 +68,10 @@ class DKP(object):
             "unit_margin_income_storage": None,
             "unit_margin_income_other1": None,
             "unit_margin_income_other2": None,
+            "unit_margin_income_separation": None,
+            "unit_margin_income_fee": None,
+            "unit_margin_income_value_money": None,
+            "unit_margin_income_tax": None,
             "service_marine": None,
             "service_port": None,
             "service_terminal1": None,
@@ -64,6 +87,10 @@ class DKP(object):
             "service_storage": None,
             "service_other1": None,
             "service_other2": None,
+            "service_separation": None,
+            "service_fee": None,
+            "service_value_money": None,
+            "service_tax": None,
             "co_executor_marine": None,
             "co_executor_port": None,
             "co_executor_terminal1": None,
@@ -78,7 +105,30 @@ class DKP(object):
             "co_executor_demurrage": None,
             "co_executor_storage": None,
             "co_executor_other1": None,
-            "co_executor_other2": None
+            "co_executor_other2": None,
+            "co_executor_separation": None,
+            "co_executor_fee": None,
+            "co_executor_value_money": None,
+            "co_executor_tax": None,
+            "reimbursable_sign_76_marine": None,
+            "reimbursable_sign_76_port": None,
+            "reimbursable_sign_76_terminal1": None,
+            "reimbursable_sign_76_terminal2": None,
+            "reimbursable_sign_76_other_terminal": None,
+            "reimbursable_sign_76_avto1": None,
+            "reimbursable_sign_76_avto2": None,
+            "reimbursable_sign_76_avto3": None,
+            "reimbursable_sign_76_rzhd1": None,
+            "reimbursable_sign_76_rzhd2": None,
+            "reimbursable_sign_76_custom": None,
+            "reimbursable_sign_76_demurrage": None,
+            "reimbursable_sign_76_storage": None,
+            "reimbursable_sign_76_other1": None,
+            "reimbursable_sign_76_other2": None,
+            "reimbursable_sign_76_separation": None,
+            "reimbursable_sign_76_fee": None,
+            "reimbursable_sign_76_value_money": None,
+            "reimbursable_sign_76_tax": None
         }
         self.dict_block_position: Dict[str, Optional[int]] = {
             "natural_indicators_ktk": None,
@@ -369,6 +419,26 @@ class DKP(object):
                 if month_string in val
             ), None),
 
+            "co_executor_rate_per_unite_marine": safe_strip(row, "co_executor_rate_per_unite_marine"),
+            "co_executor_rate_per_unite_port": safe_strip(row, "co_executor_rate_per_unite_port"),
+            "co_executor_rate_per_unite_terminal1": safe_strip(row, "co_executor_rate_per_unite_terminal1"),
+            "co_executor_rate_per_unite_terminal2": safe_strip(row, "co_executor_rate_per_unite_terminal2"),
+            "co_executor_rate_per_unite_other_terminal": safe_strip(row, "co_executor_rate_per_unite_other_terminal"),
+            "co_executor_rate_per_unite_avto1": safe_strip(row, "co_executor_rate_per_unite_avto1"),
+            "co_executor_rate_per_unite_avto2": safe_strip(row, "co_executor_rate_per_unite_avto2"),
+            "co_executor_rate_per_unite_avto3": safe_strip(row, "co_executor_rate_per_unite_avto3"),
+            "co_executor_rate_per_unite_rzhd1": safe_strip(row, "co_executor_rate_per_unite_rzhd1"),
+            "co_executor_rate_per_unite_rzhd2": safe_strip(row, "co_executor_rate_per_unite_rzhd2"),
+            "co_executor_rate_per_unite_custom": safe_strip(row, "co_executor_rate_per_unite_custom"),
+            "co_executor_rate_per_unite_demurrage": safe_strip(row, "co_executor_rate_per_unite_demurrage"),
+            "co_executor_rate_per_unite_storage": safe_strip(row, "co_executor_rate_per_unite_storage"),
+            "co_executor_rate_per_unite_other1": safe_strip(row, "co_executor_rate_per_unite_other1"),
+            "co_executor_rate_per_unite_other2": safe_strip(row, "co_executor_rate_per_unite_other2"),
+            "co_executor_rate_per_unite_separation": safe_strip(row, "co_executor_rate_per_unite_separation"),
+            "co_executor_rate_per_unite_fee": safe_strip(row, "co_executor_rate_per_unite_fee"),
+            "co_executor_rate_per_unite_value_money": safe_strip(row, "co_executor_rate_per_unite_value_money"),
+            "co_executor_rate_per_unite_tax": safe_strip(row, "co_executor_rate_per_unite_tax"),
+
             "unit_margin_income_marine": safe_strip(row, "unit_margin_income_marine"),
             "unit_margin_income_port": safe_strip(row, "unit_margin_income_port"),
             "unit_margin_income_terminal1": safe_strip(row, "unit_margin_income_terminal1"),
@@ -384,6 +454,10 @@ class DKP(object):
             "unit_margin_income_storage": safe_strip(row, "unit_margin_income_storage"),
             "unit_margin_income_other1": safe_strip(row, "unit_margin_income_other1"),
             "unit_margin_income_other2": safe_strip(row, "unit_margin_income_other2"),
+            "unit_margin_income_separation": safe_strip(row, "unit_margin_income_separation"),
+            "unit_margin_income_fee": safe_strip(row, "unit_margin_income_fee"),
+            "unit_margin_income_value_money": safe_strip(row, "unit_margin_income_value_money"),
+            "unit_margin_income_tax": safe_strip(row, "unit_margin_income_tax"),
 
             "service_marine": safe_strip(row, "service_marine"),
             "service_port": safe_strip(row, "service_port"),
@@ -400,6 +474,10 @@ class DKP(object):
             "service_storage": safe_strip(row, "service_storage"),
             "service_other1": safe_strip(row, "service_other1"),
             "service_other2": safe_strip(row, "service_other2"),
+            "service_separation": safe_strip(row, "service_separation"),
+            "service_fee": safe_strip(row, "service_fee"),
+            "service_value_money": safe_strip(row, "service_value_money"),
+            "service_tax": safe_strip(row, "service_tax"),
 
             "co_executor_marine": safe_strip(row, "co_executor_marine"),
             "co_executor_port": safe_strip(row, "co_executor_port"),
@@ -416,6 +494,30 @@ class DKP(object):
             "co_executor_storage": safe_strip(row, "co_executor_storage"),
             "co_executor_other1": safe_strip(row, "co_executor_other1"),
             "co_executor_other2": safe_strip(row, "co_executor_other2"),
+            "co_executor_separation": safe_strip(row, "co_executor_separation"),
+            "co_executor_fee": safe_strip(row, "co_executor_fee"),
+            "co_executor_value_money": safe_strip(row, "co_executor_value_money"),
+            "co_executor_tax": safe_strip(row, "co_executor_tax"),
+
+            "reimbursable_sign_76_marine": safe_strip(row, "reimbursable_sign_76_marine"),
+            "reimbursable_sign_76_port": safe_strip(row, "reimbursable_sign_76_port"),
+            "reimbursable_sign_76_terminal1": safe_strip(row, "reimbursable_sign_76_terminal1"),
+            "reimbursable_sign_76_terminal2": safe_strip(row, "reimbursable_sign_76_terminal2"),
+            "reimbursable_sign_76_other_terminal": safe_strip(row, "reimbursable_sign_76_other_terminal"),
+            "reimbursable_sign_76_avto1": safe_strip(row, "reimbursable_sign_76_avto1"),
+            "reimbursable_sign_76_avto2": safe_strip(row, "reimbursable_sign_76_avto2"),
+            "reimbursable_sign_76_avto3": safe_strip(row, "reimbursable_sign_76_avto3"),
+            "reimbursable_sign_76_rzhd1": safe_strip(row, "reimbursable_sign_76_rzhd1"),
+            "reimbursable_sign_76_rzhd2": safe_strip(row, "reimbursable_sign_76_rzhd2"),
+            "reimbursable_sign_76_custom": safe_strip(row, "reimbursable_sign_76_custom"),
+            "reimbursable_sign_76_demurrage": safe_strip(row, "reimbursable_sign_76_demurrage"),
+            "reimbursable_sign_76_storage": safe_strip(row, "reimbursable_sign_76_storage"),
+            "reimbursable_sign_76_other1": safe_strip(row, "reimbursable_sign_76_other1"),
+            "reimbursable_sign_76_other2": safe_strip(row, "reimbursable_sign_76_other2"),
+            "reimbursable_sign_76_separation": safe_strip(row, "reimbursable_sign_76_separation"),
+            "reimbursable_sign_76_fee": safe_strip(row, "reimbursable_sign_76_fee"),
+            "reimbursable_sign_76_value_money": safe_strip(row, "reimbursable_sign_76_value_money"),
+            "reimbursable_sign_76_tax": safe_strip(row, "reimbursable_sign_76_tax"),
 
             "original_file_name": self.basename_filename,
             "original_file_parsed_on": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -437,13 +539,13 @@ class DKP(object):
         """
         logger.info(f'File - {self.basename_filename}. Datetime - {datetime.now()}')
         # Match department
-        dkp_pattern: str = '|'.join(map(re.escape, DKP_NAMES))
+        dkp_pattern: str = '|'.join(map(re.escape, DKP_NAMES.keys()))
         department_match: Match = re.search(rf'{dkp_pattern}', self.basename_filename)
         if not department_match:
             self.send_error(
                 message='Error code 10: Department не указан в файле! Файл:', error_code=10
             )
-        metadata: dict = {'department': department_match.group(0)}
+        metadata: dict = {'department': DKP_NAMES[f"{department_match.group(0)}"]}
         # Match year
         year_match: Match = re.search(r'\d{4}', self.basename_filename)
         if not year_match:
