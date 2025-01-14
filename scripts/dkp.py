@@ -83,10 +83,10 @@ class DKP(object):
         self.dict_block_position: Dict[str, Optional[int]] = {
             "natural_indicators_ktk": None,
             "unit_rates_co_executors": None,
-            "specific_marginal_income": None,
-            "comment_service": None,
+            "unit_margin_income": None,
+            "service": None,
             "co_executor": None,
-            "sign_compensatory": None,
+            "reimbursable_sign_76": None,
             "natural_indicators_teus": None
         }
 
