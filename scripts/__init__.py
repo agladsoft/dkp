@@ -8,6 +8,7 @@ from clickhouse_connect.driver.query import Sequence
 
 os.environ['XL_IDP_ROOT_DKP'] = "."
 
+
 load_dotenv()
 
 
